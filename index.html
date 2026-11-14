@@ -1,0 +1,631 @@
+
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10131d">
+<title>WASL | وَصْل</title>
+<style>
+:root{--bg:#0e111a;--panel:#171c29;--panel2:#202638;--line:#30394d;--text:#f4f5fa;--muted:#a9b1c4;--gold:#e8bd72;--green:#8bd5b2}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 80% -10%,#293047 0,transparent 38%),var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;min-height:100vh}
+button,input,textarea{font:inherit}button{cursor:pointer;border:0}
+.wrap{max-width:1040px;margin:auto;padding:22px 16px 100px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.brand{font-size:26px;font-weight:850;letter-spacing:1px}.brand span{color:var(--gold)}
+.sub,.small{color:var(--muted);font-size:13px}
+.panel{background:linear-gradient(145deg,#1a2030,#151a26);border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 16px 40px #0003}
+.auth{max-width:440px;margin:8vh auto}.h{font-size:22px;margin:0 0 8px}.muted{color:var(--muted);line-height:1.7}
+.field{display:grid;gap:7px;margin:14px 0}.field label{font-size:13px;color:var(--muted)}
+input,textarea{width:100%;background:#101522;border:1px solid var(--line);border-radius:12px;color:var(--text);padding:12px;outline:none}
+input:focus,textarea:focus{border-color:var(--gold)}input[type=date]{color-scheme:dark;min-height:46px}
+textarea{min-height:92px;resize:vertical}
+.btn{border-radius:12px;padding:11px 17px;font-weight:750;background:var(--gold);color:#201a11}
+.btn.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.status{font-size:13px;margin-top:12px;color:var(--muted);min-height:22px}
+.tabs{display:flex;gap:8px;overflow:auto;padding:5px 0 14px;margin-bottom:14px}
+.tab{white-space:nowrap;padding:10px 15px;border-radius:999px;background:#1a2030;color:var(--muted);border:1px solid var(--line)}
+.tab.active{background:var(--gold);color:#211a10;border-color:var(--gold);font-weight:800}
+.view{display:none}.view.active{display:block}
+.profile-card{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:20px;align-items:start}
+.avatar{width:100%;aspect-ratio:4/5;border-radius:18px;background:linear-gradient(145deg,#333c55,#202638);display:grid;place-items:center;color:var(--gold);font-size:64px;overflow:hidden}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.person-name{font-size:25px;font-weight:850;margin:0}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.chip{font-size:12px;color:#e7d6b5;background:#373044;border-radius:30px;padding:6px 10px}
+.actions{display:flex;gap:10px;margin-top:22px}.actions .btn{flex:1}
+.empty{text-align:center;padding:42px 18px}.empty .symbol{font-size:42px;margin-bottom:10px}
+.section-title{font-size:19px;margin:0 0 15px}
+.list{display:grid;gap:10px}
+.item{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:14px;background:#111725;border:1px solid var(--line);border-radius:14px}
+.notice{background:#302a22;border:1px solid #6b5737;padding:12px 14px;border-radius:13px;color:#f1d7a9;font-size:13px;line-height:1.7;margin-bottom:15px}
+.hidden{display:none!important}
+.chat-panel{margin-top:16px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#101522}
+.chat-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 15px;background:#202638;border-bottom:1px solid var(--line)}
+.chat-messages{height:min(52vh,480px);min-height:220px;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.bubble{max-width:82%;padding:10px 13px;border-radius:15px;line-height:1.65;overflow-wrap:anywhere;white-space:pre-wrap}
+.bubble.mine{align-self:flex-start;background:#51452f;color:#fff4df;border-bottom-left-radius:4px}
+.bubble.theirs{align-self:flex-end;background:#252d40;border-bottom-right-radius:4px}
+.bubble-time{display:block;font-size:10px;opacity:.7;margin-top:4px}
+.chat-compose{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);align-items:flex-end}
+.chat-compose textarea{min-height:44px;max-height:120px;resize:vertical}
+.chat-compose .btn{white-space:nowrap}
+@media(max-width:650px){.profile-card{grid-template-columns:1fr}.avatar{max-height:260px;aspect-ratio:16/9}.wrap{padding:16px 12px 90px}.panel{padding:17px}.top{margin-bottom:14px}.bubble{max-width:90%}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<main class="wrap">
+<header class="top">
+<div><div class="brand">WASL <span>وَصْل</span></div><div class="sub">مساحة للتعارف والتواصل باحترام</div></div>
+<button id="logout" class="btn secondary hidden">تسجيل الخروج</button>
+</header>
+
+<section id="auth" class="panel auth">
+<h1 class="h">مرحباً بك في وَصْل</h1>
+<p class="muted">مجتمع للبالغين فقط (+18). سجّل الدخول أو أنشئ حساباً للمتابعة.</p>
+<div class="field"><label>البريد الإلكتروني</label><input id="email" type="email" autocomplete="email" placeholder="name@example.com"></div>
+<div class="field"><label>كلمة المرور</label><input id="password" type="password" autocomplete="current-password" placeholder="8 أحرف على الأقل"></div>
+<div class="row"><button id="login" class="btn">تسجيل الدخول</button><button id="signup" class="btn secondary">إنشاء حساب</button></div>
+<div id="authMsg" class="status"></div>
+</section>
+
+<section id="app" class="hidden">
+<div class="notice">WASL في مرحلة الاختبار. الحسابات والملفات المعروضة تعتمد على المستخدمين الذين أنشؤوا حسابات فعلية في قاعدة البيانات. لا تستخدم معلومات حساسة أو صوراً خاصة أثناء التجربة.</div>
+<nav class="tabs">
+<button class="tab active" data-view="discover">اكتشف</button>
+<button class="tab" data-view="likes">إعجاباتي</button>
+<button class="tab" data-view="matches">المطابقات</button>
+<button class="tab" data-view="conversations">المحادثات</button>
+<button class="tab" data-view="profile">ملفي الشخصي</button>
+</nav>
+
+<section id="discover" class="view active panel">
+<h2 class="section-title">اكتشف أشخاصاً جدد</h2>
+<div id="discoverContent"><div class="empty"><div class="symbol">✦</div><p class="muted">جارٍ تحميل الملفات...</p></div></div>
+<div id="discoverMsg" class="status"></div>
+</section>
+
+<section id="likes" class="view panel">
+<h2 class="section-title">الإعجابات التي أرسلتها</h2><div id="likesContent" class="list"></div>
+</section>
+
+<section id="matches" class="view panel">
+<h2 class="section-title">المطابقات</h2><div id="matchesContent" class="list"></div>
+<p class="small">تظهر المطابقة عندما يرسل الطرفان إعجاباً متبادلاً.</p>
+</section>
+
+<section id="conversations" class="view panel">
+<div class="row" style="justify-content:space-between">
+<h2 class="section-title">المحادثات</h2><button id="refreshConversations" class="btn secondary">تحديث</button>
+</div>
+<div id="conversationsContent" class="list"><div class="empty muted">جارٍ تحميل المحادثات...</div></div>
+<div id="chatPanel" class="chat-panel hidden">
+<div class="chat-head">
+<div><b id="chatTitle">المحادثة</b><div id="chatSubtitle" class="small"></div></div>
+<button id="closeChat" class="btn secondary">إغلاق</button>
+</div>
+<div id="chatMessages" class="chat-messages"><div class="empty muted">اختر محادثة لعرض الرسائل.</div></div>
+<div class="chat-compose">
+<textarea id="messageInput" maxlength="2000" rows="2" placeholder="اكتب رسالتك هنا..."></textarea>
+<button id="sendMessage" class="btn">إرسال</button>
+</div>
+<div id="chatMsg" class="status" style="padding:0 12px 8px;margin:0"></div>
+</div>
+</section>
+
+<section id="profile" class="view panel">
+<h2 class="section-title">ملفي الشخصي</h2>
+<div class="field"><label>الاسم الظاهر</label><input id="displayName" maxlength="50"></div>
+<div class="field"><label>تاريخ الميلاد</label><input id="birthDate" type="date" autocomplete="bday"><p class="small">يُستخدم تاريخ الميلاد للتحقق من أن عمرك 18 سنة على الأقل، ولن يظهر للآخرين.</p></div>
+<div class="field"><label>المدينة</label><input id="city" maxlength="80"></div>
+<div class="field"><label>نبذة عنك</label><textarea id="bio" maxlength="500"></textarea></div>
+<div class="field"><label>الاهتمامات (افصل بينها بفواصل)</label><input id="interests" maxlength="250" placeholder="الموسيقى، السفر، القراءة"></div>
+<div class="field"><label>رابط صورة عامة (اختياري)</label><input id="avatarUrl" type="url" placeholder="https://..."></div>
+<button id="saveProfile" class="btn">حفظ الملف الشخصي</button>
+<div id="profileMsg" class="status"></div>
+</section>
+</section>
+</main>
+
+<script>
+const SUPABASE_URL='https://alucnnnfujpcdsbtsmfr.supabase.co';
+const SUPABASE_KEY='sb_publishable_Xes1ENWtrREMhAMHuKkoAw_O_hqCQ5B';
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+let me=null;
+let people=[],myLikes=[],myMatches=[];
+let demoMode=false;
+let currentConversation=null;
+let messageChannel=null;
+let messageLoadVersion=0;
+
+const DEMO_PEOPLE=[
+{id:'demo-layla',display_name:'ليلى',city:'بغداد',bio:'أحب القراءة والموسيقى والرحلات الهادئة. أبحث عن حوار لطيف وصادق.',interests:['القراءة','الموسيقى','السفر'],avatar_url:null,demo:true},
+{id:'demo-noor',display_name:'نور',city:'البصرة',bio:'مهتمة بالفن والتصوير واكتشاف أماكن جديدة.',interests:['التصوير','الفن','القهوة'],avatar_url:null,demo:true},
+{id:'demo-sara',display_name:'سارة',city:'أربيل',bio:'أحب الطبيعة والأفلام وتعلم اللغات.',interests:['الطبيعة','الأفلام','اللغات'],avatar_url:null,demo:true}
+];
+
+const $=id=>document.getElementById(id);
+function msg(id,text){$(id).textContent=text||'';}
+
+function esc(s=''){
+return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function demoLiked(){
+try{return JSON.parse(localStorage.getItem('wasl_demo_likes_'+(me?.id||''))||'[]');}
+catch{return [];}
+}
+function saveDemoLiked(ids){localStorage.setItem('wasl_demo_likes_'+me.id,JSON.stringify(ids));}
+
+function setBirthDateLimit(){
+const today=new Date();
+const y=today.getFullYear(),m=String(today.getMonth()+1).padStart(2,'0'),d=String(today.getDate()).padStart(2,'0');
+$('birthDate').max=`${y}-${m}-${d}`;
+}
+
+function validateAdultBirthDate(value){
+if(!value)return 'يرجى إدخال تاريخ ميلادك.';
+const parts=value.split('-');
+if(parts.length!==3)return 'تاريخ الميلاد غير صالح.';
+const year=Number(parts[0]),month=Number(parts[1]),day=Number(parts[2]);
+if(!year||!month||!day)return 'تاريخ الميلاد غير صالح.';
+const birth=new Date(year,month-1,day);
+if(birth.getFullYear()!==year||birth.getMonth()!==month-1||birth.getDate()!==day)return 'تاريخ الميلاد غير صالح.';
+const today=new Date();today.setHours(0,0,0,0);
+if(birth>today)return 'لا يمكن أن يكون تاريخ الميلاد في المستقبل.';
+let age=today.getFullYear()-year;
+if(today.getMonth()<month-1||(today.getMonth()===month-1&&today.getDate()<day))age--;
+if(age<18)return 'عذراً، يجب أن يكون عمرك 18 سنة على الأقل لاستخدام وَصْل.';
+return null;
+}
+
+/* إدارة اتصال Realtime */
+async function stopRealtime(){
+if(messageChannel){
+const oldChannel=messageChannel;
+messageChannel=null;
+try{await db.removeChannel(oldChannel);}
+catch(e){console.warn('Realtime cleanup:',e);}
+}
+}
+
+async function startRealtime(conversationId){
+await stopRealtime();
+
+if(!currentConversation||currentConversation.id!==conversationId)return;
+
+const channelName='wasl-messages-'+conversationId+'-'+me.id;
+
+messageChannel=db
+.channel(channelName)
+.on('postgres_changes',{
+event:'INSERT',
+schema:'public',
+table:'messages',
+filter:'conversation_id=eq.'+conversationId
+},payload=>{
+if(!currentConversation||currentConversation.id!==conversationId)return;
+if(payload.new){
+loadMessages();
+}
+})
+.subscribe((status,error)=>{
+if(!currentConversation||currentConversation.id!==conversationId)return;
+
+if(status==='SUBSCRIBED'){
+msg('chatMsg','الاتصال الفوري نشط. ستظهر الرسائل الجديدة تلقائياً.');
+loadMessages();
+}else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
+msg('chatMsg','تعذر الاتصال الفوري. يمكنك استخدام زر التحديث مؤقتاً.');
+console.warn('Realtime error:',error||status);
+}else if(status==='CLOSED'){
+console.log('Realtime channel closed');
+}
+});
+}
+
+function showApp(user){
+me=user;
+$('auth').classList.add('hidden');
+$('app').classList.remove('hidden');
+$('logout').classList.remove('hidden');
+loadAll();
+}
+
+function showAuth(){
+$('app').classList.add('hidden');
+$('auth').classList.remove('hidden');
+$('logout').classList.add('hidden');
+}
+
+async function loadProfile(){
+const {data,error}=await db.from('profiles')
+.select('display_name,bio,city,interests,avatar_url')
+.eq('id',me.id).maybeSingle();
+
+if(error){msg('profileMsg','تعذر تحميل الملف: '+error.message);return;}
+
+if(data){
+$('displayName').value=data.display_name||'';
+$('city').value=data.city||'';
+$('bio').value=data.bio||'';
+$('interests').value=Array.isArray(data.interests)?data.interests.join('، '):(data.interests||'');
+$('avatarUrl').value=data.avatar_url||'';
+}
+
+const {data:privateData,error:privateError}=await db.from('private_profiles')
+.select('birth_date').eq('id',me.id).maybeSingle();
+
+if(privateError){msg('profileMsg','تعذر تحميل تاريخ الميلاد: '+privateError.message);return;}
+$('birthDate').value=privateData?.birth_date||'';
+}
+
+async function loadAll(){
+setBirthDateLimit();
+await loadProfile();
+await Promise.all([loadPeople(),loadLikes(),loadMatches()]);
+}
+
+async function loadPeople(){
+const {data,error}=await db.from('profiles')
+.select('id,display_name,bio,city,interests,avatar_url,created_at')
+.neq('id',me.id).order('created_at',{ascending:false}).limit(60);
+
+if(error){
+$('discoverContent').innerHTML='<div class="empty"><p>تعذر تحميل الأشخاص.</p><p class="small">'+esc(error.message)+'</p></div>';
+return;
+}
+const realPeople=data||[];
+demoMode=realPeople.length===0;
+people=demoMode?DEMO_PEOPLE.filter(p=>!demoLiked().includes(p.id)):realPeople;
+renderPeople();
+}
+
+function renderPeople(){
+const host=$('discoverContent');
+if(!people.length){
+host.innerHTML='<div class="empty"><div class="symbol">♡</div><h3>لا توجد ملفات أخرى حتى الآن</h3><p class="muted">قاعدة البيانات لا تحتوي حالياً على مستخدمين آخرين. نحتاج إلى حساب تجريبي ثانٍ لاختبار الإعجاب والمطابقة.</p></div>';
+return;
+}
+const p=people[0];
+const demoNote=demoMode?'<div class="notice">وضع تجربة: هذه ملفات افتراضية لا تمثل أشخاصاً حقيقيين. الإعجابات هنا محلية على هذا الجهاز ولا تُرسل إلى قاعدة البيانات.</div>':'';
+const interests=Array.isArray(p.interests)?p.interests:(typeof p.interests==='string'?p.interests.split(/[،,]/):[]);
+
+host.innerHTML=demoNote+`
+<div class="profile-card"><div>
+<div class="row" style="justify-content:space-between">
+<h3 class="person-name">${esc(p.display_name||'عضو جديد')}</h3><span class="small">ملف مجتمعي</span>
+</div>
+<p class="muted">${esc(p.city||'المدينة غير محددة')}</p>
+<p style="line-height:1.9">${esc(p.bio||'لم يضف هذا العضو نبذة بعد.')}</p>
+<div class="chips">${interests.filter(Boolean).map(x=>`<span class="chip">${esc(x.trim())}</span>`).join('')}</div>
+<div class="actions"><button id="likeBtn" class="btn">♡ إرسال إعجاب</button><button id="skipBtn" class="btn secondary">التالي</button></div>
+</div>
+<div class="avatar">${p.avatar_url?`<img src="${esc(p.avatar_url)}" alt="الصورة الشخصية" onerror="this.remove()">`:'✦'}</div>
+</div>`;
+
+$('likeBtn').onclick=()=>likePerson(p);
+$('skipBtn').onclick=()=>{people.push(people.shift());renderPeople();};
+}
+
+async function likePerson(p){
+$('likeBtn').disabled=true;
+msg('discoverMsg','جارٍ إرسال الإعجاب...');
+
+if(p.demo){
+const ids=demoLiked();
+if(!ids.includes(p.id))ids.push(p.id);
+saveDemoLiked(ids);
+msg('discoverMsg','تم تسجيل إعجاب تجريبي على هذا الجهاز فقط. لم يُرسل إلى مستخدم حقيقي.');
+people=people.filter(x=>x.id!==p.id);
+renderPeople();
+await loadLikes();
+return;
+}
+
+const {error}=await db.from('likes').upsert(
+{liker_id:me.id,liked_id:p.id},
+{onConflict:'liker_id,liked_id',ignoreDuplicates:true}
+);
+
+if(error){msg('discoverMsg','لم ينجح الإعجاب: '+error.message);$('likeBtn').disabled=false;return;}
+
+msg('discoverMsg','تم إرسال الإعجاب. إذا أعجب بك الطرف الآخر أيضاً فستنشأ مطابقة.');
+people=people.filter(x=>x.id!==p.id);
+renderPeople();
+await Promise.all([loadLikes(),loadMatches()]);
+}
+
+async function loadLikes(){
+const {data,error}=await db.from('likes').select('liked_id').eq('liker_id',me.id);
+if(error){$('likesContent').innerHTML='<div class="small">تعذر تحميل الإعجابات: '+esc(error.message)+'</div>';return;}
+myLikes=data||[];
+const localDemo=DEMO_PEOPLE.filter(p=>demoLiked().includes(p.id));
+
+if(!myLikes.length&&!localDemo.length){
+$('likesContent').innerHTML='<div class="empty muted">لم ترسل أي إعجابات بعد.</div>';return;
+}
+
+const ids=myLikes.map(x=>x.liked_id);
+let realHtml='';
+if(ids.length){
+const {data:ps,error:e}=await db.from('profiles').select('id,display_name,city').in('id',ids);
+realHtml=e?'<p class="small">تعذر عرض الإعجابات الحقيقية.</p>':(ps||[]).map(p=>`
+<div class="item"><div><b>${esc(p.display_name||'عضو')}</b><div class="small">${esc(p.city||'')}</div></div><span class="chip">إعجاب حقيقي</span></div>`).join('');
+}
+const demoHtml=localDemo.map(p=>`
+<div class="item"><div><b>${esc(p.display_name)}</b><div class="small">${esc(p.city)}</div></div><span class="chip">إعجاب تجريبي محلي</span></div>`).join('');
+$('likesContent').innerHTML=realHtml+demoHtml;
+}
+
+async function loadMatches(){
+const {data,error}=await db.from('matches')
+.select('id,user_a,user_b,created_at')
+.or(`user_a.eq.${me.id},user_b.eq.${me.id}`)
+.order('created_at',{ascending:false});
+
+if(error){$('matchesContent').innerHTML='<div class="small">تعذر تحميل المطابقات: '+esc(error.message)+'</div>';return;}
+myMatches=data||[];
+
+if(!myMatches.length){
+$('matchesContent').innerHTML='<div class="empty muted">لا توجد مطابقات بعد. ستظهر هنا عند تبادل الإعجاب.</div>';
+$('conversationsContent').innerHTML='<div class="empty muted">ستظهر محادثاتك هنا بعد حدوث تطابق.</div>';
+return;
+}
+
+const ids=myMatches.map(m=>m.user_a===me.id?m.user_b:m.user_a);
+const {data:ps}=await db.from('profiles').select('id,display_name,city').in('id',ids);
+const map=new Map((ps||[]).map(p=>[p.id,p]));
+
+$('matchesContent').innerHTML=myMatches.map(m=>{
+const otherId=m.user_a===me.id?m.user_b:m.user_a;
+const p=map.get(otherId)||{};
+return `<div class="item"><div><b>${esc(p.display_name||'مطابقة')}</b><div class="small">${esc(p.city||'')}</div></div><button class="btn" data-open-match="${esc(m.id)}">فتح المحادثة</button></div>`;
+}).join('');
+
+document.querySelectorAll('#matchesContent [data-open-match]').forEach(b=>b.onclick=()=>openChat(b.dataset.openMatch));
+await loadConversations();
+}
+
+async function loadConversations(){
+const host=$('conversationsContent');
+if(!myMatches.length){host.innerHTML='<div class="empty muted">ستظهر محادثاتك هنا بعد حدوث تطابق.</div>';return;}
+
+const matchIds=myMatches.map(m=>m.id);
+const {data:convs,error}=await db.from('conversations')
+.select('id,match_id,created_at').in('match_id',matchIds).order('created_at',{ascending:false});
+
+if(error){host.innerHTML='<div class="small">تعذر تحميل المحادثات: '+esc(error.message)+'</div>';return;}
+
+const byMatch=new Map((convs||[]).map(c=>[c.match_id,c]));
+const otherIds=myMatches.map(m=>m.user_a===me.id?m.user_b:m.user_a);
+const {data:profiles}=await db.from('profiles').select('id,display_name,city').in('id',otherIds);
+const profileMap=new Map((profiles||[]).map(p=>[p.id,p]));
+
+host.innerHTML=myMatches.map(m=>{
+const otherId=m.user_a===me.id?m.user_b:m.user_a;
+const p=profileMap.get(otherId)||{};
+const c=byMatch.get(m.id);
+return `<div class="item"><div><b>${esc(p.display_name||'مطابقة')}</b><div class="small">${esc(p.city||'')}${c?' · محادثة موجودة':' · لم تبدأ المحادثة بعد'}</div></div><button class="btn ${c?'':'secondary'}" data-open-match="${esc(m.id)}">${c?'فتح المحادثة':'بدء المحادثة'}</button></div>`;
+}).join('');
+
+host.querySelectorAll('[data-open-match]').forEach(b=>b.onclick=()=>openChat(b.dataset.openMatch));
+}
+
+async function openChat(matchId){
+const match=myMatches.find(m=>m.id===matchId);
+if(!match){msg('chatMsg','لم نعثر على هذه المطابقة. حدّث قائمة المطابقات.');return;}
+
+await stopRealtime();
+currentConversation=null;
+
+const otherId=match.user_a===me.id?match.user_b:match.user_a;
+const {data:other,error:otherError}=await db.from('profiles')
+.select('display_name,city').eq('id',otherId).maybeSingle();
+
+if(otherError){msg('chatMsg','تعذر تحميل بيانات الطرف الآخر: '+otherError.message);return;}
+
+$('chatTitle').textContent=other?.display_name||'محادثة';
+$('chatSubtitle').textContent=other?.city||'';
+$('chatPanel').classList.remove('hidden');
+$('chatMessages').innerHTML='<div class="empty muted">جارٍ تحميل الرسائل...</div>';
+msg('chatMsg','جارٍ فتح المحادثة...');
+
+let {data:conversation,error}=await db.from('conversations')
+.select('id,match_id').eq('match_id',matchId).maybeSingle();
+
+if(error){msg('chatMsg','تعذر البحث عن المحادثة: '+error.message);return;}
+
+if(!conversation){
+const created=await db.from('conversations').insert({match_id:matchId}).select('id,match_id').single();
+
+if(created.error){
+if(created.error.code==='23505'){
+const retry=await db.from('conversations').select('id,match_id').eq('match_id',matchId).maybeSingle();
+if(retry.error||!retry.data){msg('chatMsg','تعذر فتح المحادثة: '+(retry.error?.message||created.error.message));return;}
+conversation=retry.data;
+}else{msg('chatMsg','تعذر إنشاء المحادثة: '+created.error.message);return;}
+}else{conversation=created.data;}
+}
+
+currentConversation=conversation;
+msg('chatMsg','جارٍ تحميل الرسائل...');
+await loadMessages();
+await startRealtime(conversation.id);
+}
+
+async function loadMessages(){
+if(!currentConversation||!me)return;
+
+const conversationId=currentConversation.id;
+const thisLoad=++messageLoadVersion;
+
+const {data,error}=await db.from('messages')
+.select('id,conversation_id,sender_id,body,created_at')
+.eq('conversation_id',conversationId)
+.order('created_at',{ascending:true})
+.limit(200);
+
+if(thisLoad!==messageLoadVersion||!currentConversation||currentConversation.id!==conversationId)return;
+
+if(error){
+$('chatMessages').innerHTML='<div class="empty muted">تعذر تحميل الرسائل: '+esc(error.message)+'</div>';
+msg('chatMsg','تعذر تحميل الرسائل. حاول التحديث.');
+return;
+}
+
+if(!data?.length){
+$('chatMessages').innerHTML='<div class="empty muted">لا توجد رسائل بعد. ابدأ المحادثة برسالة لطيفة.</div>';
+return;
+}
+
+$('chatMessages').innerHTML=data.map(m=>{
+const mine=m.sender_id===me.id;
+const time=m.created_at?new Date(m.created_at).toLocaleString('ar-IQ',{dateStyle:'short',timeStyle:'short'}):'';
+return `<div class="bubble ${mine?'mine':'theirs'}" data-message-id="${esc(m.id)}">${esc(m.body)}<span class="bubble-time">${mine?'أنت':'الطرف الآخر'} · ${esc(time)}</span></div>`;
+}).join('');
+
+$('chatMessages').scrollTop=$('chatMessages').scrollHeight;
+}
+
+async function sendMessage(){
+if(!currentConversation||!me)return;
+const body=$('messageInput').value.trim();
+if(!body){msg('chatMsg','اكتب رسالة أولاً.');return;}
+
+const button=$('sendMessage');
+button.disabled=true;
+msg('chatMsg','جارٍ إرسال الرسالة...');
+
+const conversationId=currentConversation.id;
+const {error}=await db.from('messages').insert({
+conversation_id:conversationId,
+sender_id:me.id,
+body:body
+});
+
+if(error){
+msg('chatMsg','تعذر إرسال الرسالة: '+error.message);
+button.disabled=false;
+return;
+}
+
+$('messageInput').value='';
+msg('chatMsg','تم إرسال الرسالة.');
+if(currentConversation?.id===conversationId)await loadMessages();
+button.disabled=false;
+}
+
+$('sendMessage').onclick=sendMessage;
+
+$('messageInput').addEventListener('keydown',e=>{
+if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}
+});
+
+$('closeChat').onclick=async()=>{
+await stopRealtime();
+currentConversation=null;
+messageLoadVersion++;
+$('chatPanel').classList.add('hidden');
+$('chatMessages').innerHTML='<div class="empty muted">اختر محادثة لعرض الرسائل.</div>';
+msg('chatMsg','');
+};
+
+$('refreshConversations').onclick=async()=>{
+await loadMatches();
+if(currentConversation)await loadMessages();
+};
+
+$('login').onclick=async()=>{
+msg('authMsg','جارٍ تسجيل الدخول...');
+const {data,error}=await db.auth.signInWithPassword({
+email:$('email').value.trim(),password:$('password').value
+});
+if(error){msg('authMsg',error.message);return;}
+showApp(data.user);
+};
+
+$('signup').onclick=async()=>{
+msg('authMsg','جارٍ إنشاء الحساب...');
+const email=$('email').value.trim();
+const password=$('password').value;
+if(password.length<8){msg('authMsg','اجعل كلمة المرور 8 أحرف على الأقل.');return;}
+
+const {data,error}=await db.auth.signUp({email,password,options:{data:{}}});
+if(error){msg('authMsg',error.message);return;}
+if(data.session){showApp(data.user);}
+else{msg('authMsg','تم إنشاء الحساب. افتح رسالة التأكيد في بريدك، ثم ارجع وسجّل الدخول.');}
+};
+
+$('logout').onclick=async()=>{
+await stopRealtime();
+await db.auth.signOut();
+me=null;
+currentConversation=null;
+messageLoadVersion++;
+showAuth();
+msg('authMsg','تم تسجيل الخروج.');
+};
+
+$('saveProfile').onclick=async()=>{
+if(!me){msg('profileMsg','يرجى تسجيل الدخول أولاً.');return;}
+if(!$('displayName').value.trim()){msg('profileMsg','يرجى إدخال الاسم الظاهر.');return;}
+
+const birthDate=$('birthDate').value;
+const ageError=validateAdultBirthDate(birthDate);
+if(ageError){msg('profileMsg',ageError);return;}
+
+const saveButton=$('saveProfile');
+saveButton.disabled=true;
+msg('profileMsg','جارٍ حفظ الملف الشخصي...');
+
+const {error:privateError}=await db.from('private_profiles').upsert(
+{id:me.id,birth_date:birthDate},{onConflict:'id'}
+);
+
+if(privateError){
+msg('profileMsg','تعذر حفظ تاريخ الميلاد: '+privateError.message);
+saveButton.disabled=false;
+return;
+}
+
+const payload={
+id:me.id,
+display_name:$('displayName').value.trim(),
+city:$('city').value.trim(),
+bio:$('bio').value.trim(),
+interests:$('interests').value.split(/[،,]/).map(x=>x.trim()).filter(Boolean),
+avatar_url:$('avatarUrl').value.trim()||null,
+updated_at:new Date().toISOString()
+};
+
+const {error}=await db.from('profiles').upsert(payload,{onConflict:'id'});
+
+if(error){msg('profileMsg','تم حفظ تاريخ الميلاد، لكن تعذر حفظ بقية الملف: '+error.message);}
+else{msg('profileMsg','تم حفظ الملف الشخصي وتاريخ الميلاد بنجاح.');}
+saveButton.disabled=false;
+};
+
+document.querySelectorAll('.tab').forEach(b=>{
+b.onclick=()=>{
+document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));
+document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===b.dataset.view));
+if(b.dataset.view==='discover')loadPeople();
+if(b.dataset.view==='matches')loadMatches();
+if(b.dataset.view==='conversations')loadMatches();
+};
+});
+
+(async()=>{
+setBirthDateLimit();
+const {data:{session}}=await db.auth.getSession();
+if(session)showApp(session.user);
+})();
+</script>
+</body>
+</html>
